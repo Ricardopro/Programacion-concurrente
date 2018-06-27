@@ -1,0 +1,39 @@
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.MessageProperties;
+import static java.lang.Thread.sleep;
+import java.util.Random;
+
+public class Productor {
+
+	private static final String TASK_QUEUE_NAME = "task_queue";
+	private static final int N_Produccion = 20;
+	public static void main(String[] argv) throws Exception {
+		String ID = argv[0];
+		ConnectionFactory factory = new ConnectionFactory();
+		factory.setHost("localhost");
+		Connection connection = factory.newConnection();
+		Channel channel = connection.createChannel();
+
+		channel.queueDeclare(TASK_QUEUE_NAME, true, false, false, null);
+	    	System.out.println(" [*] Produciendo... To exit press CTRL+C");
+		
+		String message;  
+		int producidos=1;
+		Random randomGenerator = new Random();
+		while(producidos<=N_Produccion){
+						
+			message="Productor: "+ID+", nº "+String.valueOf(producidos);  
+			channel.basicPublish("", TASK_QUEUE_NAME,
+				MessageProperties.PERSISTENT_TEXT_PLAIN,
+				message.getBytes("UTF-8"));
+			System.out.println(" [x] Sent '" + "Productor: "+ID+" --> Produccion nº: "+String.valueOf(producidos) + "'");
+			
+			sleep(randomGenerator.nextInt(1000));
+			producidos++;
+		}
+		channel.close();
+		connection.close();
+	}
+}
